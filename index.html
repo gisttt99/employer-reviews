@@ -1,146 +1,161 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-  <meta charset="UTF-8">
-  <title>Αξιολογήσεις Εργοδοτών</title>
+  <meta charset="UTF-8" />
+  <title>+ERGASIA - Αξιολογήσεις Εργοδοτών</title>
   <style>
     body {
+      margin: 0; 
       font-family: Arial, sans-serif;
       background: #f4f4f4;
-      margin: 0;
-      padding: 0;
     }
-
     header {
-      background-color: #6a0dad;
-      padding: 15px 20px;
+      background: #6a0dad; /* μωβ */
       color: white;
-    }
-
-    .logo {
-      font-size: 24px;
+      padding: 15px 20px;
       font-weight: bold;
+      font-size: 24px;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      z-index: 100;
     }
-
-    h1 {
-      text-align: center;
-      color: #333;
-      margin: 20px 0;
-    }
-
-    .container {
+    main {
       max-width: 700px;
-      margin: auto;
-      padding: 20px;
-    }
-
-    .box {
+      margin: 90px auto 30px;
       background: white;
       padding: 20px;
-      margin-bottom: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-
     label {
-      display: block;
-      margin-top: 10px;
       font-weight: bold;
+      display: block;
+      margin-top: 15px;
     }
-
-    input, select, textarea {
+    input[type="text"], input[type="email"], input[type="password"], select, textarea {
       width: 100%;
       padding: 8px;
       margin-top: 5px;
       border-radius: 5px;
       border: 1px solid #ccc;
+      font-size: 14px;
+      box-sizing: border-box;
     }
-
+    textarea {
+      resize: vertical;
+    }
     button {
       margin-top: 15px;
-      padding: 10px 20px;
-      background-color: #4CAF50;
+      background-color: #6a0dad;
       color: white;
       border: none;
+      padding: 10px 18px;
       border-radius: 5px;
       cursor: pointer;
+      font-size: 16px;
     }
-
     button:hover {
-      background-color: #45a049;
+      background-color: #580a9d;
     }
-
-    .review {
-      background: white;
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-
     .stars {
       color: gold;
+      font-size: 18px;
+      user-select: none;
     }
-
-    .delete-button {
-      background-color: #e53935;
-      color: white;
-      border: none;
-      padding: 5px 10px;
+    .review {
+      border-bottom: 1px solid #ddd;
+      padding: 12px 0;
+    }
+    .review:last-child {
+      border-bottom: none;
+    }
+    .review small {
+      color: #555;
+    }
+    .delete-btn {
+      margin-top: 8px;
+      background: #e74c3c;
+      padding: 5px 12px;
+      font-size: 13px;
       border-radius: 4px;
-      float: right;
+      cursor: pointer;
+      border: none;
+      color: white;
+    }
+    .delete-btn:hover {
+      background: #c0392b;
+    }
+    #reviewsList {
+      margin-top: 25px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .login-section, .review-section {
+      margin-top: 20px;
+    }
+    .autocomplete-suggestions {
+      border: 1px solid #ccc;
+      max-height: 120px;
+      overflow-y: auto;
+      position: absolute;
+      background: white;
+      z-index: 10;
+      width: calc(100% - 18px);
+      box-sizing: border-box;
+      border-radius: 0 0 6px 6px;
+    }
+    .autocomplete-suggestion {
+      padding: 8px;
       cursor: pointer;
     }
-
-    .delete-button:hover {
-      background-color: #c62828;
+    .autocomplete-suggestion:hover {
+      background-color: #f0f0f0;
+    }
+    .user-info {
+      font-size: 14px;
+      color: white;
     }
   </style>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
 </head>
 <body>
 
   <header>
-    <div class="logo">+ERGASIA</div>
+    +ERGASIA
+    <div class="user-info" id="userInfo">
+      <button id="logoutBtn" style="display:none;">Αποσύνδεση</button>
+    </div>
   </header>
 
-  <h1>Αξιολογήσεις Εργοδοτών</h1>
+  <main>
+    <section class="login-section" id="loginSection">
+      <h2>Σύνδεση / Εγγραφή</h2>
+      <label for="emailInput">Email</label>
+      <input type="email" id="emailInput" placeholder="Πληκτρολόγησε το email σου" />
 
-  <div class="container">
+      <label for="passwordInput">Κωδικός</label>
+      <input type="password" id="passwordInput" placeholder="Πληκτρολόγησε τον κωδικό σου" />
 
-    <!-- Προσθήκη νέας εταιρείας -->
-    <div class="box">
-      <h2>Νέα Εταιρεία</h2>
-      <label for="newCompany">Όνομα Εταιρείας</label>
-      <input id="newCompany" placeholder="Π.χ. Εταιρεία Χ">
-      <button onclick="addCompany()">Προσθήκη</button>
-    </div>
+      <button id="loginBtn">Σύνδεση</button>
+      <button id="registerBtn" style="margin-left: 10px; background-color:#3498db;">Εγγραφή</button>
+    </section>
 
-    <!-- Επιλογή εταιρείας και φίλτρα -->
-    <div class="box">
-      <h2>Επιλογή Εταιρείας</h2>
-      <label for="company">Εταιρεία</label>
-      <select id="company" onchange="showReviews()"></select>
+    <section class="review-section" id="reviewSection" style="display:none;">
+      <label for="companyInput">Εταιρεία</label>
+      <input type="text" id="companyInput" autocomplete="off" placeholder="Γράψε ή επίλεξε εταιρεία" />
+      <div id="autocompleteList" class="autocomplete-suggestions"></div>
 
-      <label for="sector">Κλάδος</label>
-      <input id="sector" placeholder="Π.χ. Πληροφορική">
-
-      <label for="location">Τοποθεσία</label>
-      <input id="location" placeholder="Π.χ. Αθήνα">
-
-      <label for="size">Μέγεθος Εταιρείας</label>
-      <select id="size">
-        <option value="">Επιλέξτε</option>
-        <option>Μικρή</option>
-        <option>Μεσαία</option>
-        <option>Μεγάλη</option>
-      </select>
-    </div>
-
-    <!-- Υποβολή αξιολόγησης -->
-    <div class="box">
-      <h2>Γράψε Αξιολόγηση</h2>
-      <label for="rating">Βαθμολογία (1-5)</label>
-      <select id="rating">
+      <label for="ratingSelect">Βαθμολογία (1-5)</label>
+      <select id="ratingSelect">
         <option value="1">1 - Κακή</option>
         <option value="2">2 - Μέτρια</option>
         <option value="3">3 - Καλή</option>
@@ -148,122 +163,240 @@
         <option value="5">5 - Εξαιρετική</option>
       </select>
 
-      <label for="comment">Σχόλιο</label>
-      <textarea id="comment" rows="4" placeholder="Περιέγραψε την εμπειρία σου..."></textarea>
+      <label for="commentInput">Σχόλιο</label>
+      <textarea id="commentInput" rows="4" placeholder="Περιέγραψε την εμπειρία σου..."></textarea>
 
-      <button onclick="submitReview()">Υποβολή</button>
-    </div>
+      <button id="submitReviewBtn">Υποβολή Αξιολόγησης</button>
 
-    <!-- Λίστα αξιολογήσεων -->
-    <div class="box" id="reviewList">
-      <h2>Αξιολογήσεις</h2>
-    </div>
+      <div id="reviewsList"></div>
+    </section>
+  </main>
 
-  </div>
+<script>
+  // Firebase config - βάζεις εδώ το δικό σου config
+  const firebaseConfig = {
+    apiKey: "AIzaSyCKEa2aiGpjhxlCuNV-7pq8i5drnTMCe14",
+    authDomain: "synergasia-87e57.firebaseapp.com",
+    projectId: "synergasia-87e57",
+    storageBucket: "synergasia-87e57.appspot.com",
+    messagingSenderId: "287395074848",
+    appId: "1:287395074848:web:9f3d3a8a33920dcb0f7d45",
+    measurementId: "G-XLF7ZMX2XK"
+  };
 
-  <script>
-    const defaultCompanies = ["Εταιρεία Α", "Εταιρεία Β", "Εταιρεία Γ"];
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-    function loadCompanies() {
-      const companySelect = document.getElementById("company");
-      companySelect.innerHTML = "";
-      const stored = JSON.parse(localStorage.getItem("companies") || "[]");
-      const companies = [...new Set([...defaultCompanies, ...stored])];
-      companies.forEach(name => {
-        const opt = document.createElement("option");
-        opt.value = name;
-        opt.textContent = name;
-        companySelect.appendChild(opt);
-      });
+  // Elements
+  const loginSection = document.getElementById('loginSection');
+  const reviewSection = document.getElementById('reviewSection');
+  const emailInput = document.getElementById('emailInput');
+  const passwordInput = document.getElementById('passwordInput');
+  const loginBtn = document.getElementById('loginBtn');
+  const registerBtn = document.getElementById('registerBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const userInfo = document.getElementById('userInfo');
+
+  const companyInput = document.getElementById('companyInput');
+  const autocompleteList = document.getElementById('autocompleteList');
+  const ratingSelect = document.getElementById('ratingSelect');
+  const commentInput = document.getElementById('commentInput');
+  const submitReviewBtn = document.getElementById('submitReviewBtn');
+  const reviewsList = document.getElementById('reviewsList');
+
+  let companies = [];
+
+  // Φόρτωση εταιρειών από Firestore
+  async function loadCompanies() {
+    const snapshot = await db.collection('companies').orderBy('name').get();
+    companies = snapshot.docs.map(doc => doc.data().name);
+  }
+
+  // Εμφάνιση autocomplete προτάσεων
+  function showAutocomplete(value) {
+    autocompleteList.innerHTML = '';
+    if (!value) return;
+    const filtered = companies.filter(c => c.toLowerCase().startsWith(value.toLowerCase()));
+    filtered.forEach(c => {
+      const div = document.createElement('div');
+      div.className = 'autocomplete-suggestion';
+      div.textContent = c;
+      div.onclick = () => {
+        companyInput.value = c;
+        autocompleteList.innerHTML = '';
+        loadReviews();
+      };
+      autocompleteList.appendChild(div);
+    });
+  }
+
+  companyInput.addEventListener('input', (e) => {
+    showAutocomplete(e.target.value);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (e.target !== companyInput) autocompleteList.innerHTML = '';
+  });
+
+  // Φόρτωση αξιολογήσεων για την εταιρεία που πληκτρολογείται
+  async function loadReviews() {
+    const companyName = companyInput.value.trim();
+    reviewsList.innerHTML = '';
+
+    if (!companyName) {
+      reviewsList.innerHTML = '<p>Γράψε ή επίλεξε εταιρεία για να δεις αξιολογήσεις.</p>';
+      return;
     }
 
-    function addCompany() {
-      const name = document.getElementById("newCompany").value.trim();
-      if (!name) return;
-      const stored = JSON.parse(localStorage.getItem("companies") || "[]");
-      if (!stored.includes(name)) {
-        stored.push(name);
-        localStorage.setItem("companies", JSON.stringify(stored));
-        loadCompanies();
-        document.getElementById("company").value = name;
-        showReviews();
-      }
-      document.getElementById("newCompany").value = "";
+    const snapshot = await db.collection('reviews')
+      .where('company', '==', companyName)
+      .orderBy('date', 'desc')
+      .get();
+
+    if (snapshot.empty) {
+      reviewsList.innerHTML = '<p>Δεν υπάρχουν ακόμα αξιολογήσεις για αυτήν την εταιρεία.</p>';
+      return;
     }
 
-    function submitReview() {
-      const company = document.getElementById("company").value;
-      const rating = parseInt(document.getElementById("rating").value);
-      const comment = document.getElementById("comment").value.trim();
-      const sector = document.getElementById("sector").value.trim();
-      const location = document.getElementById("location").value.trim();
-      const size = document.getElementById("size").value;
+    snapshot.docs.forEach(doc => {
+      const r = doc.data();
+      const div = document.createElement('div');
+      div.className = 'review';
 
-      if (!comment) {
-        alert("Το σχόλιο δεν μπορεί να είναι κενό.");
-        return;
+      const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+
+      div.innerHTML = `
+        <strong>${r.company}</strong> &nbsp; 
+        <span class="stars">${stars}</span>
+        <p>${r.comment}</p>
+        <small>Από: ${r.userEmail || 'Ανώνυμος'} - ${r.date?.toDate ? r.date.toDate().toLocaleString() : ''}</small>
+      `;
+
+      // Διαγραφή μόνο από δημιουργό
+      if (auth.currentUser && auth.currentUser.email === r.userEmail) {
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Διαγραφή';
+        delBtn.className = 'delete-btn';
+        delBtn.onclick = () => deleteReview(doc.id);
+        div.appendChild(delBtn);
       }
 
-      const review = {
-        id: Date.now(),
+      reviewsList.appendChild(div);
+    });
+  }
+
+  // Υποβολή νέας αξιολόγησης
+  submitReviewBtn.addEventListener('click', async () => {
+    const company = companyInput.value.trim();
+    const rating = Number(ratingSelect.value);
+    const comment = commentInput.value.trim();
+    const user = auth.currentUser;
+
+    if (!user) {
+      alert('Πρέπει να συνδεθείς για να προσθέσεις αξιολόγηση.');
+      return;
+    }
+    if (!company) {
+      alert('Πρέπει να επιλέξεις ή να γράψεις το όνομα της εταιρείας.');
+      return;
+    }
+    if (!rating || rating < 1 || rating > 5) {
+      alert('Επίλεξε σωστή βαθμολογία.');
+      return;
+    }
+    if (!comment) {
+      alert('Γράψε κάποιο σχόλιο.');
+      return;
+    }
+
+    try {
+      // Αποθήκευση εταιρείας αν δεν υπάρχει
+      const companyRef = db.collection('companies').doc(company);
+      const companyDoc = await companyRef.get();
+      if (!companyDoc.exists) {
+        await companyRef.set({name: company});
+        companies.push(company);
+      }
+
+      // Αποθήκευση αξιολόγησης
+      await db.collection('reviews').add({
         company,
         rating,
         comment,
-        date: new Date().toLocaleDateString("el-GR"),
-        sector,
-        location,
-        size
-      };
-
-      const reviews = JSON.parse(localStorage.getItem("reviews") || "[]");
-      reviews.push(review);
-      localStorage.setItem("reviews", JSON.stringify(reviews));
-      document.getElementById("comment").value = "";
-      showReviews();
-    }
-
-    function deleteReview(id) {
-      let reviews = JSON.parse(localStorage.getItem("reviews") || "[]");
-      reviews = reviews.filter(r => r.id !== id);
-      localStorage.setItem("reviews", JSON.stringify(reviews));
-      showReviews();
-    }
-
-    function showReviews() {
-      const company = document.getElementById("company").value;
-      const reviews = JSON.parse(localStorage.getItem("reviews") || "[]");
-      const filtered = reviews.filter(r => r.company === company);
-      const list = document.getElementById("reviewList");
-
-      list.innerHTML = `<h2>Αξιολογήσεις</h2>`;
-
-      if (filtered.length === 0) {
-        list.innerHTML += "<p>Δεν υπάρχουν αξιολογήσεις για αυτήν την εταιρεία.</p>";
-        return;
-      }
-
-      const avg = (filtered.reduce((a, b) => a + b.rating, 0) / filtered.length).toFixed(1);
-      list.innerHTML += `<p>Μέση βαθμολογία: <strong>${avg}</strong> ⭐</p>`;
-
-      filtered.reverse().forEach(r => {
-        const div = document.createElement("div");
-        div.className = "review";
-        div.innerHTML = `
-          <button class="delete-button" onclick="deleteReview(${r.id})">Διαγραφή</button>
-          <div class="stars">Βαθμολογία: ${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}</div>
-          <p>${r.comment}</p>
-          <small>Ημερομηνία: ${r.date}</small><br>
-          ${r.sector ? `<small>Κλάδος: ${r.sector}</small><br>` : ""}
-          ${r.location ? `<small>Τοποθεσία: ${r.location}</small><br>` : ""}
-          ${r.size ? `<small>Μέγεθος: ${r.size}</small>` : ""}
-        `;
-        list.appendChild(div);
+        userEmail: user.email,
+        date: firebase.firestore.FieldValue.serverTimestamp()
       });
+
+      alert('Η αξιολόγηση προστέθηκε!');
+      commentInput.value = '';
+      loadCompanies();
+      loadReviews();
+    } catch(e) {
+      console.error('Σφάλμα υποβολής αξιολόγησης:', e);
     }
+  });
 
-    loadCompanies();
-    showReviews();
-  </script>
+  // Διαγραφή αξιολόγησης
+  async function deleteReview(id) {
+    if (!confirm('Είσαι σίγουρος ότι θέλεις να διαγράψεις αυτήν την αξιολόγηση;')) return;
+    try {
+      await db.collection('reviews').doc(id).delete();
+      loadReviews();
+    } catch(e) {
+      console.error('Σφάλμα διαγραφής:', e);
+    }
+  }
 
+  // Authentication
+
+  // Ενημέρωση UI ανάλογα με login status
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      loginSection.style.display = 'none';
+      reviewSection.style.display = 'block';
+      userInfo.innerHTML = `${user.email} &nbsp; <button id="logoutBtn">Αποσύνδεση</button>`;
+      document.getElementById('logoutBtn').onclick = () => auth.signOut();
+      loadCompanies().then(loadReviews);
+    } else {
+      loginSection.style.display = 'block';
+      reviewSection.style.display = 'none';
+      userInfo.innerHTML = '';
+    }
+  });
+
+  // Login
+  loginBtn.onclick = async () => {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    if (!email || !password) {
+      alert('Συμπλήρωσε email και κωδικό.');
+      return;
+    }
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+    } catch(e) {
+      alert('Σφάλμα σύνδεσης: ' + e.message);
+    }
+  };
+
+  // Register
+  registerBtn.onclick = async () => {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    if (!email || !password) {
+      alert('Συμπλήρωσε email και κωδικό.');
+      return;
+    }
+    try {
+      await auth.createUserWithEmailAndPassword(email, password);
+      alert('Η εγγραφή ολοκληρώθηκε! Μπορείς τώρα να συνδεθείς.');
+    } catch(e) {
+      alert('Σφάλμα εγγραφής: ' + e.message);
+    }
+  };
+
+</script>
 </body>
 </html>
