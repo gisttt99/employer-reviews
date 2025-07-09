@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Αξιολογήσεις Εργοδοτών</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      padding: 20px;
+      margin: 0;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+
+    .company-select, .review-form, .review-list {
+      max-width: 600px;
+      margin: 20px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background-color: #2ecc71;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 15px;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #27ae60;
+    }
+
+    .review {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease;
+    }
+
+    .review:hover {
+      transform: scale(1.01);
+    }
+
+    .stars {
+      color: gold;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+
+      .company-select, .review-form, .review-list {
+        padding: 15px;
+      }
+
+      input, select, textarea {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Αξιολογήσεις Εργοδοτών</h1>
+
+  <div class="company-select">
+    <label for="company">Εταιρεία</label>
+    <select id="company">
+      <option value="Εταιρεία Α">Εταιρεία Α</option>
+      <option value="Εταιρεία Β">Εταιρεία Β</option>
+      <option value="Εταιρεία Γ">Εταιρεία Γ</option>
+    </select>
+
+    <label for="newCompany">Ή προσθέστε νέα εταιρεία:</label>
+    <input type="text" id="newCompany" placeholder="π.χ. Εταιρεία Δ">
+    <button onclick="addCompany()">Προσθήκη</button>
+  </div>
+
+  <div class="review-form">
+    <h2>Γράψε Αξιολόγηση</h2>
+    <label for="rating">Βαθμολογία (1-5)</label>
+    <select id="rating">
+      <option value="1">1 - Κακή</option>
+      <option value="2">2 - Μέτρια</option>
+      <option value="3">3 - Καλή</option>
+      <option value="4">4 - Πολύ καλή</option>
+      <option value="5">5 - Εξαιρετική</option>
+    </select>
+
+    <label for="comment">Σχόλιο</label>
+    <textarea id="comment" rows="4" placeholder="Περιέγραψε την εμπειρία σου..."></textarea>
+
+    <button onclick="submitReview()">Υποβολή</button>
+  </div>
+
+  <div class="review-list" id="reviewList">
+    <h2>Αξιολογήσεις</h2>
+  </div>
+
+  <script>
+    function submitReview() {
+      const company = document.getElementById('company').value;
+      const rating = parseInt(document.getElementById('rating').value);
+      const comment = document.getElementById('comment').value.trim();
+
+      if (!comment) {
+        alert("Το σχόλιο δεν μπορεί να είναι κενό.");
+        return;
+      }
+
+      const review = {
+        company,
+        rating,
+        comment,
+        date: new Date().toLocaleDateString('el-GR')
+      };
+
+      const reviews = JSON.parse(localStorage.getItem('reviews') || '[]');
+      reviews.push(review);
+      localStorage.setItem('reviews', JSON.stringify(reviews));
+
+      document.getElementById('comment').value = '';
+      showReviews();
+    }
+
+    function showReviews() {
+      const company = document.getElementById('company').value;
+      const reviews = JSON.parse(localStorage.getItem('reviews') || '[]');
+      const reviewList = document.getElementById('reviewList');
+      const filtered = reviews.filter(r => r.company === company);
+
+      reviewList.innerHTML = '<h2>Αξιολογήσεις</h2>';
+
+      if (filtered.length === 0) {
+        reviewList.innerHTML += '<p>Δεν υπάρχουν ακόμα αξιολογήσεις για αυτήν την εταιρεία.</p>';
+        return;
+      }
+
+      const avg = (
+        filtered.reduce((sum, r) => sum + r.rating, 0) / filtered.length
+      ).toFixed(1);
+      reviewList.innerHTML += `<p><strong>Μέσος όρος βαθμολογίας:</strong> ${avg} / 5</p>`;
+
+      filtered.reverse().forEach(r => {
+        const div = document.createElement('div');
+        div.className = 'review';
+        div.innerHTML = `
+          <div class="stars">Βαθμολογία: ${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div>
+          <p>${r.comment}</p>
+          <small>Ημερομηνία: ${r.date}</small>
+        `;
+        reviewList.appendChild(div);
+      });
+    }
+
+    function addCompany() {
+      const newComp = document.getElementById('newCompany').value.trim();
+      if (newComp === '') return;
+
+      const select = document.getElementById('company');
+      const exists = [...select.options].some(opt => opt.value === newComp);
+      if (exists) {
+        alert('Η εταιρεία υπάρχει ήδη.');
+        return;
+      }
+
+      const option = document.createElement('option');
+      option.value = newComp;
+      option.text = newComp;
+      select.appendChild(option);
+      select.value = newComp;
+      document.getElementById('newCompany').value = '';
+      showReviews();
+    }
+
+    document.getElementById('company').addEventListener('change', showReviews);
+    showReviews();
+  </script>
+
+</body>
+</html>
