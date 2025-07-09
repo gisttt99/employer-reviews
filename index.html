@@ -2,29 +2,27 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Αξιολογήσεις Εργοδοτών</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f0f2f5;
-      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
       margin: 0;
-      color: #333;
+      padding: 20px;
     }
 
     h1 {
       text-align: center;
-      color: #2c3e50;
+      color: #333;
     }
 
-    .company-select, .review-form, .review-list {
+    .company-select, .review-form {
       max-width: 600px;
       margin: 20px auto;
-      background: #fff;
+      background: white;
       padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
     label {
@@ -35,28 +33,29 @@
 
     input, select, textarea {
       width: 100%;
-      padding: 10px;
+      padding: 8px;
       margin-top: 5px;
-      border-radius: 6px;
+      border-radius: 5px;
       border: 1px solid #ccc;
-      font-size: 15px;
     }
 
     button {
       margin-top: 15px;
       padding: 10px 20px;
-      background-color: #2ecc71;
+      background-color: #4CAF50;
       color: white;
       border: none;
-      border-radius: 6px;
+      border-radius: 5px;
       cursor: pointer;
-      font-weight: bold;
-      font-size: 15px;
-      transition: background 0.3s;
     }
 
     button:hover {
-      background-color: #27ae60;
+      background-color: #45a049;
+    }
+
+    .review-list {
+      max-width: 600px;
+      margin: 20px auto;
     }
 
     .review {
@@ -65,29 +64,24 @@
       border-radius: 10px;
       margin-bottom: 10px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      transition: transform 0.2s ease;
-    }
-
-    .review:hover {
-      transform: scale(1.01);
     }
 
     .stars {
       color: gold;
     }
 
-    @media (max-width: 600px) {
-      body {
-        padding: 10px;
-      }
+    .delete-btn {
+      margin-top: 10px;
+      background: #e74c3c;
+      border: none;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
 
-      .company-select, .review-form, .review-list {
-        padding: 15px;
-      }
-
-      input, select, textarea {
-        font-size: 16px;
-      }
+    .delete-btn:hover {
+      background: #c0392b;
     }
   </style>
 </head>
@@ -102,10 +96,6 @@
       <option value="Εταιρεία Β">Εταιρεία Β</option>
       <option value="Εταιρεία Γ">Εταιρεία Γ</option>
     </select>
-
-    <label for="newCompany">Ή προσθέστε νέα εταιρεία:</label>
-    <input type="text" id="newCompany" placeholder="π.χ. Εταιρεία Δ">
-    <button onclick="addCompany()">Προσθήκη</button>
   </div>
 
   <div class="review-form">
@@ -127,6 +117,7 @@
 
   <div class="review-list" id="reviewList">
     <h2>Αξιολογήσεις</h2>
+    <!-- Οι αξιολογήσεις θα εμφανιστούν εδώ -->
   </div>
 
   <script>
@@ -141,6 +132,7 @@
       }
 
       const review = {
+        id: Date.now(),
         company,
         rating,
         comment,
@@ -152,6 +144,13 @@
       localStorage.setItem('reviews', JSON.stringify(reviews));
 
       document.getElementById('comment').value = '';
+      showReviews();
+    }
+
+    function deleteReview(id) {
+      let reviews = JSON.parse(localStorage.getItem('reviews') || '[]');
+      reviews = reviews.filter(r => r.id !== id);
+      localStorage.setItem('reviews', JSON.stringify(reviews));
       showReviews();
     }
 
@@ -168,11 +167,6 @@
         return;
       }
 
-      const avg = (
-        filtered.reduce((sum, r) => sum + r.rating, 0) / filtered.length
-      ).toFixed(1);
-      reviewList.innerHTML += `<p><strong>Μέσος όρος βαθμολογίας:</strong> ${avg} / 5</p>`;
-
       filtered.reverse().forEach(r => {
         const div = document.createElement('div');
         div.className = 'review';
@@ -180,32 +174,15 @@
           <div class="stars">Βαθμολογία: ${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div>
           <p>${r.comment}</p>
           <small>Ημερομηνία: ${r.date}</small>
+          <br/>
+          <button class="delete-btn" onclick="deleteReview(${r.id})">Διαγραφή</button>
         `;
         reviewList.appendChild(div);
       });
     }
 
-    function addCompany() {
-      const newComp = document.getElementById('newCompany').value.trim();
-      if (newComp === '') return;
-
-      const select = document.getElementById('company');
-      const exists = [...select.options].some(opt => opt.value === newComp);
-      if (exists) {
-        alert('Η εταιρεία υπάρχει ήδη.');
-        return;
-      }
-
-      const option = document.createElement('option');
-      option.value = newComp;
-      option.text = newComp;
-      select.appendChild(option);
-      select.value = newComp;
-      document.getElementById('newCompany').value = '';
-      showReviews();
-    }
-
     document.getElementById('company').addEventListener('change', showReviews);
+
     showReviews();
   </script>
 
